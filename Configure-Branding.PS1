@@ -850,11 +850,24 @@ if (!(Test-RunningAsSystem)) {$Username = $env:USERNAME}else{$Username = $user}
 #Assemble the Scheduled task variables
 $schtaskName = $Purpose + "_" + $version
 $schtaskDescription = $Purpose
+
 $trigger = New-ScheduledTaskTrigger -AtLogOn
+
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+
+$class = cimclass MSFT_TaskEventTrigger root/Microsoft/Windows/TaskScheduler
+$trigger2 = $class | New-CimInstance -ClientOnly
+$trigger2.Enabled = $True
+$trigger2.Subscription = '<QueryList><Query Id="0" Path="System"><Select Path="System">*[System[Provider[@Name=''Microsoft-Windows-Kernel-Power''] and EventID=105]]</Select></Query></QueryList>'
+
+$trigger3 = $class | New-CimInstance -ClientOnly
+$trigger3.Enabled = $True
+$trigger3.Subscription = '<QueryList><Query Id="0" Path="Security"><Select Path="Security">*[System[Provider[@Name=''Microsoft-Windows-Security-Auditing''] and EventID=4801]]</Select></Query></QueryList>'
+
+
 $principal= New-ScheduledTaskPrincipal -GroupId "S-1-5-32-545" -Id "$Vendor"
 #$principal= New-ScheduledTaskPrincipal -LogonType Interactive -RunLevel Limited -UserId $User
 $action = New-ScheduledTaskAction -Execute C:\Windows\System32\wscript.exe -Argument "`"$VBSPath`" `"$PSScriptPath`""
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
 #Delete older tasks
 $OldTasks = (Get-ScheduledTask | Where-Object {$_.taskname -like "*$Purpose*" -and $_.taskname -ne $schtaskName  } | select taskname).taskname
@@ -869,7 +882,7 @@ $OldTasks = (Get-ScheduledTask | Where-Object {$_.taskname -like "*$Purpose*" -a
             }
 
 #Register current Schtask
-$null=Register-ScheduledTask -TaskName $schtaskName -TaskPath "\$Cust\" -Trigger $trigger -Action $action -Principal $principal -Settings $settings -Description $schtaskDescription -Force
+$null=Register-ScheduledTask -TaskName $schtaskName -TaskPath \Corrections\ -Trigger $trigger , $Trigger2 , $trigger3  -Action $action -Principal $principal -Settings $settings -Description $schtaskDescription -Force
 #start current tasdk
 Get-ScheduledTask -Taskname $schtaskName | Start-ScheduledTask
 
