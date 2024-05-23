@@ -853,8 +853,6 @@ $schtaskDescription = $Purpose
 
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-
 $class = cimclass MSFT_TaskEventTrigger root/Microsoft/Windows/TaskScheduler
 $trigger2 = $class | New-CimInstance -ClientOnly
 $trigger2.Enabled = $True
